@@ -17,7 +17,7 @@
 import {CredentialsManager, MaybeOptionalCredentialsProvider} from 'neuroglancer/credentials_provider';
 import {fetchWithOAuth2Credentials} from 'neuroglancer/credentials_provider/oauth2';
 import {CancellationToken, uncancelableToken} from 'neuroglancer/util/cancellation';
-import {parseUrl, ResponseTransform} from 'neuroglancer/util/http_request';
+import {parseUrl, ResponseTransform, cancellableFetchOk} from 'neuroglancer/util/http_request';
 import {getRandomHexString} from 'neuroglancer/util/random';
 import {cancellableFetchS3Ok} from 'neuroglancer/util/s3';
 
@@ -89,6 +89,11 @@ export function parseSpecialUrl(url: string, credentialsManager: CredentialsMana
         credentialsProvider: undefined,
         url,
       };
+    case 'sbh':
+    return {
+      credentialsProvider: undefined,
+      url,
+    };
     default:
       return {
         credentialsProvider: undefined,
@@ -136,6 +141,21 @@ export async function cancellableFetchSpecialOk<T>(
           init, transformResponse, cancellationToken);
     case 's3':
       return cancellableFetchS3Ok(u.host, u.path, init, transformResponse, cancellationToken);
+    case 'sbh':
+
+    const token = 'xQSXUATcXC7L1sIdISzkwOsLRkPLVLZcYi3QiS9cjP';
+
+    const headers = new Headers();
+    headers.append('Authorization', `${token}`);
+
+    const requestOptions: RequestInit = {
+      method: 'GET', // Set your desired HTTP method
+      headers: headers,
+      ...init // Include other properties from the original init object
+    };
+    return await cancellableFetchOk(
+      `https://${u.host}${u.path}`, requestOptions, transformResponse,
+      cancellationToken); // CancellationToken = uncancelableToken
     default:
       return fetchWithOAuth2Credentials(
           credentialsProvider, url, init, transformResponse, cancellationToken);
