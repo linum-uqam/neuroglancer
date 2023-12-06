@@ -88,6 +88,7 @@ const specialProtocolEmptyCompletions: CompletionWithDescription[] = [
     description: 'Google Cloud Storage (XML API) authenticated via ngauth'
   },
   {value: 's3://', description: 'Amazon Simple Storage Service (S3)'},
+  {value: 'sbh://', description: 'SBH storage system'},
   {value: 'https://'},
   {value: 'http://'},
 ];
