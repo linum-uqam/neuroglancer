@@ -67,6 +67,7 @@ import {makeIcon} from 'neuroglancer/widget/icon';
 import {MousePositionWidget, PositionWidget} from 'neuroglancer/widget/position_widget';
 import {TrackableScaleBarOptions} from 'neuroglancer/widget/scale_bar';
 import {RPC} from 'neuroglancer/worker_rpc';
+import {Client} from 'neuroglancer/python_integration/api';
 
 declare var NEUROGLANCER_OVERRIDE_DEFAULT_VIEWER_OPTIONS: any;
 
@@ -531,6 +532,20 @@ export class Viewer extends RefCounted implements ViewerState {
       topRow.appendChild(stateShare.element);
     }
 
+    // Custom button to save state
+    {
+      const button = document.createElement('button');
+      button.textContent = 'Save state';
+      button.addEventListener('click', () => {
+        const state = this.state.toJSON();
+        const client = new Client();
+        client.sendActionNotification('save_state', state);
+    
+        // document.dispatchEvent(keyEvent);
+      });
+      topRow.appendChild(button);
+    }
+
     {
       const {layerListPanelState} = this;
       const button =
@@ -823,3 +838,9 @@ export class Viewer extends RefCounted implements ViewerState {
     }
   }
 }
+document.addEventListener('keydown', (event) => {
+  if (event.ctrlKey && event.key === 's') {
+    event.preventDefault();
+  }
+});
+

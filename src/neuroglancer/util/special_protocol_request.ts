@@ -20,6 +20,7 @@ import {CancellationToken, uncancelableToken} from 'neuroglancer/util/cancellati
 import {parseUrl, ResponseTransform, cancellableFetchOk} from 'neuroglancer/util/http_request';
 import {getRandomHexString} from 'neuroglancer/util/random';
 import {cancellableFetchS3Ok} from 'neuroglancer/util/s3';
+import {cancellableFetchOk} from 'neuroglancer/util/http_request';
 
 export type SpecialProtocolCredentials = any;
 export type SpecialProtocolCredentialsProvider =
@@ -141,21 +142,22 @@ export async function cancellableFetchSpecialOk<T>(
           init, transformResponse, cancellationToken);
     case 's3':
       return cancellableFetchS3Ok(u.host, u.path, init, transformResponse, cancellationToken);
+
     case 'sbh':
+        // const token = localStorage.getItem('Authorization'); // Retrieve the token from local storage
+        const token = 'xQSXUATcXC7L1sIdISzkwOsLRkPLVLZcYi3QiS9cjP';
+        const headers = new Headers();
+        headers.append('Authorization', token as string);
+  
+        const requestOptions: RequestInit = {
+          method: 'GET', // Set your desired HTTP method
+          headers: headers,
+          ...init // Include other properties from the original init object
+        };
+        return await cancellableFetchOk(
+          `https://${u.host}${u.path}`, requestOptions, transformResponse,
+          cancellationToken); // CancellationToken = uncancelableToken
 
-    const token = 'xQSXUATcXC7L1sIdISzkwOsLRkPLVLZcYi3QiS9cjP';
-
-    const headers = new Headers();
-    headers.append('Authorization', `${token}`);
-
-    const requestOptions: RequestInit = {
-      method: 'GET', // Set your desired HTTP method
-      headers: headers,
-      ...init // Include other properties from the original init object
-    };
-    return await cancellableFetchOk(
-      `https://${u.host}${u.path}`, requestOptions, transformResponse,
-      cancellationToken); // CancellationToken = uncancelableToken
     default:
       return fetchWithOAuth2Credentials(
           credentialsProvider, url, init, transformResponse, cancellationToken);
