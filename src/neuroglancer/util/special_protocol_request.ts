@@ -17,7 +17,7 @@
 import {CredentialsManager, MaybeOptionalCredentialsProvider} from 'neuroglancer/credentials_provider';
 import {fetchWithOAuth2Credentials} from 'neuroglancer/credentials_provider/oauth2';
 import {CancellationToken, uncancelableToken} from 'neuroglancer/util/cancellation';
-import {parseUrl, ResponseTransform} from 'neuroglancer/util/http_request';
+import {parseUrl, ResponseTransform, cancellableFetchOk} from 'neuroglancer/util/http_request';
 import {getRandomHexString} from 'neuroglancer/util/random';
 import {cancellableFetchS3Ok} from 'neuroglancer/util/s3';
 import {cancellableFetchOk} from 'neuroglancer/util/http_request';
@@ -90,6 +90,11 @@ export function parseSpecialUrl(url: string, credentialsManager: CredentialsMana
         credentialsProvider: undefined,
         url,
       };
+    case 'sbh':
+    return {
+      credentialsProvider: undefined,
+      url,
+    };
     default:
       return {
         credentialsProvider: undefined,
@@ -137,7 +142,8 @@ export async function cancellableFetchSpecialOk<T>(
           init, transformResponse, cancellationToken);
     case 's3':
       return cancellableFetchS3Ok(u.host, u.path, init, transformResponse, cancellationToken);
-      case 'sbh':
+
+    case 'sbh':
         // const token = localStorage.getItem('Authorization'); // Retrieve the token from local storage
         const token = 'xQSXUATcXC7L1sIdISzkwOsLRkPLVLZcYi3QiS9cjP';
         const headers = new Headers();
