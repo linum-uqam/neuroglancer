@@ -107,6 +107,51 @@ export async function fetchOk(input: RequestInfo, init?: RequestInit): Promise<R
   }
 }
 
+// Append a header to the request. Works for secure requests
+// export async function fetchOk(input: RequestInfo, init?: RequestInit): Promise<Response> {
+
+//   console.log('fetchOk', input, init);
+
+//   const token = 'xQSXUATcXC7L1sIdISzkwOsLRkPLVLZcYi3QiS9cjP';
+
+//   const headers = new Headers();
+//   headers.append('Authorization', `${token}`);
+
+//   const requestOptions: RequestInit = {
+//     method: 'GET', // Set your desired HTTP method
+//     headers: headers,
+//     ...init // Include other properties from the original init object
+//   };
+
+//   const request = new Request(input, requestOptions);
+
+//   for (let requestAttempt = 0;;) {
+//     if (requestOptions?.signal?.aborted) {
+//       throw CANCELED;
+//     }
+//     let response: Response;
+//     try {
+//       response = await fetch(request);
+//     } catch (error) {
+//       throw HttpError.fromRequestError(input, error);
+//     }
+//     if (!response.ok) {
+//       const {status} = response;
+//       if (status === 429 || status === 503 || status === 504) {
+//         // 429: Too Many Requests.  Retry.
+//         // 503: Service unavailable.  Retry.
+//         // 504: Gateway timeout.  Can occur if the server takes too long to reply.  Retry.
+//         if (++requestAttempt !== maxAttempts) {
+//           await new Promise(resolve => setTimeout(resolve, pickDelay(requestAttempt - 1)));
+//           continue;
+//         }
+//       }
+//       throw HttpError.fromResponse(response);
+//     }
+//     return response;
+//   }
+// }
+
 export function responseArrayBuffer(response: Response): Promise<ArrayBuffer> {
   return response.arrayBuffer();
 }
