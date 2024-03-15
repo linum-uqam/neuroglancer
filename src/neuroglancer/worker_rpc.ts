@@ -16,7 +16,7 @@
 
 import {CANCELED, CancellationToken, CancellationTokenSource, makeCancelablePromise, uncancelableToken} from 'neuroglancer/util/cancellation';
 import {RefCounted} from 'neuroglancer/util/disposable';
-
+import { tokenManager } from 'src/neuroglancer/BearerTokenManager';
 export type RPCHandler = (this: RPC, x: any) => void;
 
 export type RpcId = number;
@@ -148,6 +148,7 @@ export class RPC {
     }
     this.target.postMessage(x, transfers);
   }
+  
 
   promiseInvoke<T>(name: string, x: any, cancellationToken = uncancelableToken, transfers?: any[]):
       Promise<T> {
@@ -332,6 +333,7 @@ export function registerSharedObject(identifier?: string) {
   };
 }
 
+
 registerRPC('SharedObject.new', function(x) {
   let rpc = <RPC>this;
   let typeName = <string>x['type'];
@@ -340,3 +342,24 @@ registerRPC('SharedObject.new', function(x) {
   // Counterpart objects start with a reference count of zero.
   --obj.refCount;
 });
+
+registerRPC('initialize.info', function(x) {
+  // Handle the initialization data
+  // This function gets called when 'initialize' message is received
+  console.log('Received initialization data via RPC', x);
+  let data = x.data;
+  let url = data.url;
+  let token = parseCookie(data.cookies, 'bearer_token');
+  console.log('Received token:', token);
+  console.log('Received url:', url);
+  tokenManager.updateBearerTokenIfNeeded(token);
+
+});
+
+function parseCookie(cookies: string, name: string) {
+  let cookie = cookies.split(';').find(c => c.startsWith(name));
+  if (cookie === undefined) {
+    return undefined;
+  }
+  return cookie.split('=')[1];
+}
