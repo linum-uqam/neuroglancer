@@ -874,7 +874,7 @@ export class Viewer extends RefCounted implements ViewerState {
     return undefined;
   }
   private updateBearerTokenIfNeeded(): void {
-    const newBearerToken = this.getCookie('bearer_token');
+    const newBearerToken = this.getCookie('access_token');
     console.log("newBearerToken:", newBearerToken);
     // Update the trackable string only if the new value is not undefined
     if (newBearerToken !== undefined) {

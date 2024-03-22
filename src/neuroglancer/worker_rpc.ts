@@ -349,7 +349,7 @@ registerRPC('initialize.info', function(x) {
   console.log('Received initialization data via RPC', x);
   let data = x.data;
   let url = data.url;
-  let token = parseCookie(data.cookies, 'bearer_token');
+  let token = parseCookie(data.cookies, 'access_token');
   console.log('Received token:', token);
   console.log('Received url:', url);
   tokenManager.updateBearerTokenIfNeeded(token);
