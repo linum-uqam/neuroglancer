@@ -14,69 +14,70 @@
  * limitations under the License.
  */
 
-import {CredentialsManager, MaybeOptionalCredentialsProvider} from 'neuroglancer/credentials_provider';
-import {fetchWithOAuth2Credentials} from 'neuroglancer/credentials_provider/oauth2';
-import {CancellationToken, uncancelableToken} from 'neuroglancer/util/cancellation';
-import {parseUrl, ResponseTransform, cancellableFetchOk} from 'neuroglancer/util/http_request';
-import {getRandomHexString} from 'neuroglancer/util/random';
-import {cancellableFetchS3Ok} from 'neuroglancer/util/s3';
-import {cancellableFetchOk} from 'neuroglancer/util/http_request';
+import { CredentialsManager, MaybeOptionalCredentialsProvider } from 'neuroglancer/credentials_provider';
+import { fetchWithOAuth2Credentials } from 'neuroglancer/credentials_provider/oauth2';
+import { CancellationToken, uncancelableToken } from 'neuroglancer/util/cancellation';
+import { parseUrl, ResponseTransform } from 'neuroglancer/util/http_request';
+import { getRandomHexString } from 'neuroglancer/util/random';
+import { cancellableFetchS3Ok } from 'neuroglancer/util/s3';
+import { cancellableFetchOk } from 'neuroglancer/util/http_request';
 
+import { tokenManager } from 'src/neuroglancer/BearerTokenManager';
 export type SpecialProtocolCredentials = any;
 export type SpecialProtocolCredentialsProvider =
-    MaybeOptionalCredentialsProvider<SpecialProtocolCredentials>;
+  MaybeOptionalCredentialsProvider<SpecialProtocolCredentials>;
 
 function getMiddleAuthCredentialsProvider(
-    credentialsManager: CredentialsManager, url: string): SpecialProtocolCredentialsProvider {
+  credentialsManager: CredentialsManager, url: string): SpecialProtocolCredentialsProvider {
   return credentialsManager.getCredentialsProvider('middleauthapp', new URL(url).origin);
 }
 
 function getNgauthCredentialsProvider(
-    credentialsManager: CredentialsManager, serverUrl: string,
-    path: string): SpecialProtocolCredentialsProvider {
+  credentialsManager: CredentialsManager, serverUrl: string,
+  path: string): SpecialProtocolCredentialsProvider {
   const bucketPattern = /^\/([^\/]+)/;
   const m = path.match(bucketPattern);
   if (m === null) return undefined;
   return typeof NEUROGLANCER_PYTHON_INTEGRATION !== 'undefined' ?
-      credentialsManager.getCredentialsProvider('gcs', {bucket: m[1]}) :
-      credentialsManager.getCredentialsProvider(
-          'ngauth_gcs', {authServer: serverUrl, bucket: m[1]});
+    credentialsManager.getCredentialsProvider('gcs', { bucket: m[1] }) :
+    credentialsManager.getCredentialsProvider(
+      'ngauth_gcs', { authServer: serverUrl, bucket: m[1] });
 }
 
-export function parseSpecialUrl(url: string, credentialsManager: CredentialsManager):
-    {url: string, credentialsProvider: SpecialProtocolCredentialsProvider} {
+export function parseSpecialUrl(url: string, credentialsManager: CredentialsManager): { url: string, credentialsProvider: SpecialProtocolCredentialsProvider } {
   const u = parseUrl(url);
+  console.log(u);
   switch (u.protocol) {
     case 'gs':
     case 'gs+xml':
       return {
         credentialsProvider: typeof NEUROGLANCER_PYTHON_INTEGRATION !== 'undefined' ?
-            credentialsManager.getCredentialsProvider('gcs', {bucket: u.host}) :
-            undefined,
+          credentialsManager.getCredentialsProvider('gcs', { bucket: u.host }) :
+          undefined,
         url,
       };
     case 'gs+ngauth+http':
       return {
         credentialsProvider:
-            getNgauthCredentialsProvider(credentialsManager, `http://${u.host}`, u.path),
+          getNgauthCredentialsProvider(credentialsManager, `http://${u.host}`, u.path),
         url: 'gs:/' + u.path,
       };
     case 'gs+ngauth+https':
       return {
         credentialsProvider:
-            getNgauthCredentialsProvider(credentialsManager, `https://${u.host}`, u.path),
+          getNgauthCredentialsProvider(credentialsManager, `https://${u.host}`, u.path),
         url: 'gs:/' + u.path,
       };
     case 'gs+xml+ngauth+http':
       return {
         credentialsProvider:
-            getNgauthCredentialsProvider(credentialsManager, `http://${u.host}`, u.path),
+          getNgauthCredentialsProvider(credentialsManager, `http://${u.host}`, u.path),
         url: 'gs+xml:/' + u.path,
       };
     case 'gs+xml+ngauth+https':
       return {
         credentialsProvider:
-            getNgauthCredentialsProvider(credentialsManager, `https://${u.host}`, u.path),
+          getNgauthCredentialsProvider(credentialsManager, `https://${u.host}`, u.path),
         url: 'gs+xml:/' + u.path,
       };
     case 'middleauth+https':
@@ -91,10 +92,10 @@ export function parseSpecialUrl(url: string, credentialsManager: CredentialsMana
         url,
       };
     case 'sbh':
-    return {
-      credentialsProvider: undefined,
-      url,
-    };
+      return {
+        credentialsProvider: undefined,
+        url,
+      };
     default:
       return {
         credentialsProvider: undefined,
@@ -104,9 +105,9 @@ export function parseSpecialUrl(url: string, credentialsManager: CredentialsMana
 }
 
 export async function cancellableFetchSpecialOk<T>(
-    credentialsProvider: SpecialProtocolCredentialsProvider, url: string, init: RequestInit,
-    transformResponse: ResponseTransform<T>,
-    cancellationToken: CancellationToken = uncancelableToken): Promise<T> {
+  credentialsProvider: SpecialProtocolCredentialsProvider, url: string, init: RequestInit,
+  transformResponse: ResponseTransform<T>,
+  cancellationToken: CancellationToken = uncancelableToken): Promise<T> {
   const u = parseUrl(url);
   switch (u.protocol) {
     case 'gs':
@@ -129,37 +130,34 @@ export async function cancellableFetchSpecialOk<T>(
       //    metadata value), GCS may return stale responses.
       //
       return fetchWithOAuth2Credentials(
-          credentialsProvider,
-          `https://www.googleapis.com/storage/v1/b/${u.host}/o/` +
-              `${encodeURIComponent(u.path.substring(1))}?alt=media` +
-              `&neuroglancer=${getRandomHexString()}`,
-          init, transformResponse, cancellationToken);
+        credentialsProvider,
+        `https://www.googleapis.com/storage/v1/b/${u.host}/o/` +
+        `${encodeURIComponent(u.path.substring(1))}?alt=media` +
+        `&neuroglancer=${getRandomHexString()}`,
+        init, transformResponse, cancellationToken);
     case 'gs+xml':
       return fetchWithOAuth2Credentials(
-          credentialsProvider,
-          `https://storage.googleapis.com/${u.host}${u.path}` +
-              `?neuroglancer=${getRandomHexString()}`,
-          init, transformResponse, cancellationToken);
+        credentialsProvider,
+        `https://storage.googleapis.com/${u.host}${u.path}` +
+        `?neuroglancer=${getRandomHexString()}`,
+        init, transformResponse, cancellationToken);
     case 's3':
       return cancellableFetchS3Ok(u.host, u.path, init, transformResponse, cancellationToken);
-
     case 'sbh':
-        // const token = localStorage.getItem('Authorization'); // Retrieve the token from local storage
-        const token = 'xQSXUATcXC7L1sIdISzkwOsLRkPLVLZcYi3QiS9cjP';
-        const headers = new Headers();
-        headers.append('Authorization', token as string);
-  
-        const requestOptions: RequestInit = {
-          method: 'GET', // Set your desired HTTP method
-          headers: headers,
-          ...init // Include other properties from the original init object
-        };
-        return await cancellableFetchOk(
-          `https://${u.host}${u.path}`, requestOptions, transformResponse,
-          cancellationToken); // CancellationToken = uncancelableToken
 
+      const headers = new Headers();
+      headers.append('Authorization', tokenManager.bearerToken as string);
+
+      const requestOptions: RequestInit = {
+        method: 'GET', // Set your desired HTTP method
+        headers: headers,
+        ...init // Include other properties from the original init object
+      };
+      return await cancellableFetchOk(
+        `https://${u.host}${u.path}`, requestOptions, transformResponse,
+        cancellationToken); // CancellationToken = uncancelableToken
     default:
       return fetchWithOAuth2Credentials(
-          credentialsProvider, url, init, transformResponse, cancellationToken);
+        credentialsProvider, url, init, transformResponse, cancellationToken);
   }
 }

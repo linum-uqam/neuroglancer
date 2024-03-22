@@ -22,52 +22,56 @@ import svg_layers from 'ikonate/icons/layers.svg';
 import svg_list from 'ikonate/icons/list.svg';
 import svg_settings from 'ikonate/icons/settings.svg';
 import debounce from 'lodash/debounce';
-import {CapacitySpecification, ChunkManager, ChunkQueueManager, FrameNumberCounter} from 'neuroglancer/chunk_manager/frontend';
-import {makeCoordinateSpace, TrackableCoordinateSpace} from 'neuroglancer/coordinate_transform';
-import {defaultCredentialsManager} from 'neuroglancer/credentials_provider/default_manager';
-import {InputEventBindings as DataPanelInputEventBindings} from 'neuroglancer/data_panel_layout';
-import {DataSourceProviderRegistry} from 'neuroglancer/datasource';
-import {getDefaultDataSourceProvider} from 'neuroglancer/datasource/default_provider';
-import {StateShare, stateShareEnabled} from 'neuroglancer/datasource/state_share';
-import {DisplayContext, TrackableWindowedViewport} from 'neuroglancer/display_context';
-import {HelpPanelState, InputEventBindingHelpDialog} from 'neuroglancer/help/input_event_bindings';
-import {addNewLayer, LayerManager, LayerSelectedValues, MouseSelectionState, SelectedLayerState, TopLevelLayerListSpecification, TrackableDataSelectionState} from 'neuroglancer/layer';
-import {RootLayoutContainer} from 'neuroglancer/layer_groups_layout';
-import {CoordinateSpacePlaybackVelocity, DisplayPose, NavigationState, OrientationState, PlaybackManager, Position, TrackableCrossSectionZoom, TrackableDepthRange, TrackableDisplayDimensions, TrackableProjectionZoom, TrackableRelativeDisplayScales, WatchableDisplayDimensionRenderInfo} from 'neuroglancer/navigation_state';
-import {overlaysOpen} from 'neuroglancer/overlay';
-import {allRenderLayerRoles, RenderLayerRole} from 'neuroglancer/renderlayer';
-import {StatusMessage} from 'neuroglancer/status';
-import {ElementVisibilityFromTrackableBoolean, TrackableBoolean} from 'neuroglancer/trackable_boolean';
-import {makeDerivedWatchableValue, observeWatchable, TrackableValue, WatchableValueInterface} from 'neuroglancer/trackable_value';
-import {LayerArchiveCountWidget, LayerListPanel, LayerListPanelState} from 'neuroglancer/ui/layer_list_panel';
-import {LayerSidePanelManager} from 'neuroglancer/ui/layer_side_panel';
-import {setupPositionDropHandlers} from 'neuroglancer/ui/position_drag_and_drop';
-import {SelectionDetailsPanel} from 'neuroglancer/ui/selection_details';
-import {SidePanelManager} from 'neuroglancer/ui/side_panel';
-import {StateEditorDialog} from 'neuroglancer/ui/state_editor';
-import {StatisticsDisplayState, StatisticsPanel} from 'neuroglancer/ui/statistics';
-import {GlobalToolBinder, LocalToolBinder} from 'neuroglancer/ui/tool';
-import {ViewerSettingsPanel, ViewerSettingsPanelState} from 'neuroglancer/ui/viewer_settings';
-import {AutomaticallyFocusedElement} from 'neuroglancer/util/automatic_focus';
-import {TrackableRGB} from 'neuroglancer/util/color';
-import {Borrowed, Owned, RefCounted} from 'neuroglancer/util/disposable';
-import {removeFromParent} from 'neuroglancer/util/dom';
-import {ActionEvent, registerActionListener} from 'neuroglancer/util/event_action_map';
-import {vec3} from 'neuroglancer/util/geom';
-import {parseFixedLengthArray, verifyFinitePositiveFloat, verifyObject, verifyOptionalObjectProperty, verifyString} from 'neuroglancer/util/json';
-import {EventActionMap, KeyboardEventBinder} from 'neuroglancer/util/keyboard_bindings';
-import {NullarySignal} from 'neuroglancer/util/signal';
-import {CompoundTrackable, optionallyRestoreFromJsonMember} from 'neuroglancer/util/trackable';
-import {ViewerState, VisibilityPrioritySpecification} from 'neuroglancer/viewer_state';
-import {WatchableVisibilityPriority} from 'neuroglancer/visibility_priority/frontend';
-import {GL} from 'neuroglancer/webgl/context';
-import {AnnotationToolStatusWidget} from 'neuroglancer/widget/annotation_tool_status';
-import {CheckboxIcon} from 'neuroglancer/widget/checkbox_icon';
-import {makeIcon} from 'neuroglancer/widget/icon';
-import {MousePositionWidget, PositionWidget} from 'neuroglancer/widget/position_widget';
-import {TrackableScaleBarOptions} from 'neuroglancer/widget/scale_bar';
-import {RPC} from 'neuroglancer/worker_rpc';
-import {Client} from 'neuroglancer/python_integration/api';
+import { CapacitySpecification, ChunkManager, ChunkQueueManager, FrameNumberCounter } from 'neuroglancer/chunk_manager/frontend';
+import { makeCoordinateSpace, TrackableCoordinateSpace } from 'neuroglancer/coordinate_transform';
+import { defaultCredentialsManager } from 'neuroglancer/credentials_provider/default_manager';
+import { InputEventBindings as DataPanelInputEventBindings } from 'neuroglancer/data_panel_layout';
+import { DataSourceProviderRegistry } from 'neuroglancer/datasource';
+import { getDefaultDataSourceProvider } from 'neuroglancer/datasource/default_provider';
+import { StateShare, stateShareEnabled } from 'neuroglancer/datasource/state_share';
+import { DisplayContext, TrackableWindowedViewport } from 'neuroglancer/display_context';
+import { HelpPanelState, InputEventBindingHelpDialog } from 'neuroglancer/help/input_event_bindings';
+import { addNewLayer, LayerManager, LayerSelectedValues, MouseSelectionState, SelectedLayerState, TopLevelLayerListSpecification, TrackableDataSelectionState } from 'neuroglancer/layer';
+import { RootLayoutContainer } from 'neuroglancer/layer_groups_layout';
+import { CoordinateSpacePlaybackVelocity, DisplayPose, NavigationState, OrientationState, PlaybackManager, Position, TrackableCrossSectionZoom, TrackableDepthRange, TrackableDisplayDimensions, TrackableProjectionZoom, TrackableRelativeDisplayScales, WatchableDisplayDimensionRenderInfo } from 'neuroglancer/navigation_state';
+import { overlaysOpen } from 'neuroglancer/overlay';
+import { allRenderLayerRoles, RenderLayerRole } from 'neuroglancer/renderlayer';
+import { StatusMessage } from 'neuroglancer/status';
+import { ElementVisibilityFromTrackableBoolean, TrackableBoolean } from 'neuroglancer/trackable_boolean';
+import { makeDerivedWatchableValue, observeWatchable, TrackableValue, WatchableValueInterface } from 'neuroglancer/trackable_value';
+import { LayerArchiveCountWidget, LayerListPanel, LayerListPanelState } from 'neuroglancer/ui/layer_list_panel';
+import { LayerSidePanelManager } from 'neuroglancer/ui/layer_side_panel';
+import { setupPositionDropHandlers } from 'neuroglancer/ui/position_drag_and_drop';
+import { SelectionDetailsPanel } from 'neuroglancer/ui/selection_details';
+import { SidePanelManager } from 'neuroglancer/ui/side_panel';
+import { StateEditorDialog } from 'neuroglancer/ui/state_editor';
+import { StatisticsDisplayState, StatisticsPanel } from 'neuroglancer/ui/statistics';
+import { GlobalToolBinder, LocalToolBinder } from 'neuroglancer/ui/tool';
+import { ViewerSettingsPanel, ViewerSettingsPanelState } from 'neuroglancer/ui/viewer_settings';
+import { AutomaticallyFocusedElement } from 'neuroglancer/util/automatic_focus';
+import { TrackableRGB } from 'neuroglancer/util/color';
+import { Borrowed, Owned, RefCounted } from 'neuroglancer/util/disposable';
+import { removeFromParent } from 'neuroglancer/util/dom';
+import { ActionEvent, registerActionListener } from 'neuroglancer/util/event_action_map';
+import { vec3 } from 'neuroglancer/util/geom';
+import { parseFixedLengthArray, verifyFinitePositiveFloat, verifyObject, verifyOptionalObjectProperty, verifyString } from 'neuroglancer/util/json';
+import { EventActionMap, KeyboardEventBinder } from 'neuroglancer/util/keyboard_bindings';
+import { NullarySignal } from 'neuroglancer/util/signal';
+import { CompoundTrackable, optionallyRestoreFromJsonMember } from 'neuroglancer/util/trackable';
+import { ViewerState, VisibilityPrioritySpecification } from 'neuroglancer/viewer_state';
+import { WatchableVisibilityPriority } from 'neuroglancer/visibility_priority/frontend';
+import { GL } from 'neuroglancer/webgl/context';
+import { AnnotationToolStatusWidget } from 'neuroglancer/widget/annotation_tool_status';
+import { CheckboxIcon } from 'neuroglancer/widget/checkbox_icon';
+import { makeIcon } from 'neuroglancer/widget/icon';
+import { MousePositionWidget, PositionWidget } from 'neuroglancer/widget/position_widget';
+import { TrackableScaleBarOptions } from 'neuroglancer/widget/scale_bar';
+import { RPC } from 'neuroglancer/worker_rpc';
+import { Client } from 'neuroglancer/python_integration/api';
+
+import { tokenManager } from 'src/neuroglancer/BearerTokenManager';
+
+
 
 declare var NEUROGLANCER_OVERRIDE_DEFAULT_VIEWER_OPTIONS: any;
 
@@ -76,7 +80,7 @@ interface CreditLink {
   text: string;
 }
 
-declare var NEUROGLANCER_CREDIT_LINK: CreditLink|CreditLink[]|undefined;
+declare var NEUROGLANCER_CREDIT_LINK: CreditLink | CreditLink[] | undefined;
 
 export class DataManagementContext extends RefCounted {
   worker: Worker;
@@ -88,20 +92,27 @@ export class DataManagementContext extends RefCounted {
   }
 
   constructor(
-      public gl: GL, public frameNumberCounter: FrameNumberCounter, bundleRoot: string = '') {
+    public gl: GL, public frameNumberCounter: FrameNumberCounter, bundleRoot: string = '') {
     super();
     const chunk_worker_url = bundleRoot + 'chunk_worker.bundle.js';
     this.worker = new Worker(chunk_worker_url);
     this.chunkQueueManager = this.registerDisposer(
-        new ChunkQueueManager(new RPC(this.worker), this.gl, this.frameNumberCounter, {
-          gpuMemory: new CapacitySpecification({defaultItemLimit: 1e6, defaultSizeLimit: 1e9}),
-          systemMemory: new CapacitySpecification({defaultItemLimit: 1e7, defaultSizeLimit: 2e9}),
-          download: new CapacitySpecification(
-              {defaultItemLimit: 100, defaultSizeLimit: Number.POSITIVE_INFINITY}),
-          compute: new CapacitySpecification({defaultItemLimit: 128, defaultSizeLimit: 5e8}),
-        }));
+      new ChunkQueueManager(new RPC(this.worker), this.gl, this.frameNumberCounter, {
+        gpuMemory: new CapacitySpecification({ defaultItemLimit: 1e6, defaultSizeLimit: 1e9 }),
+        systemMemory: new CapacitySpecification({ defaultItemLimit: 1e7, defaultSizeLimit: 2e9 }),
+        download: new CapacitySpecification(
+          { defaultItemLimit: 100, defaultSizeLimit: Number.POSITIVE_INFINITY }),
+        compute: new CapacitySpecification({ defaultItemLimit: 128, defaultSizeLimit: 5e8 }),
+      }));
     this.chunkQueueManager.registerDisposer(() => this.worker.terminate());
     this.chunkManager = this.registerDisposer(new ChunkManager(this.chunkQueueManager));
+    this.sendInitializationDataToWorker({
+      url: window.location.href,
+      cookies: document.cookie,
+    });
+  }
+  sendInitializationDataToWorker(data: { url: string; cookies: string }) {
+    this.rpc.invoke('initialize.info', {data: data});
   }
 }
 
@@ -142,11 +153,11 @@ export type ViewerUIConfiguration = {
 
 export function makeViewerUIConfiguration(): ViewerUIConfiguration {
   return Object.fromEntries(VIEWER_UI_CONFIG_OPTIONS.map(
-             key => [key, new TrackableBoolean(true)])) as ViewerUIConfiguration;
+    key => [key, new TrackableBoolean(true)])) as ViewerUIConfiguration;
 }
 
 function setViewerUiConfiguration(
-    config: ViewerUIConfiguration, options: Partial<ViewerUIOptions>) {
+  config: ViewerUIConfiguration, options: Partial<ViewerUIOptions>) {
   for (const key of VIEWER_UI_CONFIG_OPTIONS) {
     const value = options[key];
     if (value !== undefined) {
@@ -167,11 +178,11 @@ export interface ViewerOptions extends ViewerUIOptions, VisibilityPrioritySpecif
 }
 
 const defaultViewerOptions = 'undefined' !== typeof NEUROGLANCER_OVERRIDE_DEFAULT_VIEWER_OPTIONS ?
-    NEUROGLANCER_OVERRIDE_DEFAULT_VIEWER_OPTIONS :
-    {
-      showLayerDialog: true,
-      resetStateWhenEmpty: true,
-    };
+  NEUROGLANCER_OVERRIDE_DEFAULT_VIEWER_OPTIONS :
+  {
+    showLayerDialog: true,
+    resetStateWhenEmpty: true,
+  };
 
 class TrackableViewerState extends CompoundTrackable {
   constructor(public viewer: Borrowed<Viewer>) {
@@ -198,10 +209,10 @@ class TrackableViewerState extends CompoundTrackable {
     this.add('gpuMemoryLimit', viewer.dataContext.chunkQueueManager.capacities.gpuMemory.sizeLimit);
     this.add('prefetch', viewer.dataContext.chunkQueueManager.enablePrefetch);
     this.add(
-        'systemMemoryLimit',
-        viewer.dataContext.chunkQueueManager.capacities.systemMemory.sizeLimit);
+      'systemMemoryLimit',
+      viewer.dataContext.chunkQueueManager.capacities.systemMemory.sizeLimit);
     this.add(
-        'concurrentDownloads', viewer.dataContext.chunkQueueManager.capacities.download.itemLimit);
+      'concurrentDownloads', viewer.dataContext.chunkQueueManager.capacities.download.itemLimit);
     this.add('selectedLayer', viewer.selectedLayer);
     this.add('crossSectionBackgroundColor', viewer.crossSectionBackgroundColor);
     this.add('projectionBackgroundColor', viewer.perspectiveViewBackgroundColor);
@@ -217,7 +228,7 @@ class TrackableViewerState extends CompoundTrackable {
   }
 
   restoreState(obj: any) {
-    const {viewer} = this;
+    const { viewer } = this;
     super.restoreState(obj);
     // Handle legacy properties
     verifyOptionalObjectProperty(obj, 'navigation', navObj => {
@@ -230,7 +241,7 @@ class TrackableViewerState extends CompoundTrackable {
           verifyOptionalObjectProperty(positionObj, 'voxelSize', voxelSizeObj => {
             // Handle legacy voxelSize representation
             const voxelSize =
-                parseFixedLengthArray(new Float64Array(3), voxelSizeObj, verifyFinitePositiveFloat);
+              parseFixedLengthArray(new Float64Array(3), voxelSizeObj, verifyFinitePositiveFloat);
             for (let i = 0; i < 3; ++i) {
               voxelSize[i] *= 1e-9;
             }
@@ -245,45 +256,45 @@ class TrackableViewerState extends CompoundTrackable {
         optionallyRestoreFromJsonMember(poseObj, 'orientation', viewer.crossSectionOrientation);
       });
       optionallyRestoreFromJsonMember(
-          navObj, 'zoomFactor', viewer.crossSectionScale.legacyJsonView);
+        navObj, 'zoomFactor', viewer.crossSectionScale.legacyJsonView);
     });
     optionallyRestoreFromJsonMember(obj, 'perspectiveOrientation', viewer.projectionOrientation);
     optionallyRestoreFromJsonMember(obj, 'perspectiveZoom', viewer.projectionScale.legacyJsonView);
     optionallyRestoreFromJsonMember(
-        obj, 'perspectiveViewBackgroundColor', viewer.perspectiveViewBackgroundColor);
+      obj, 'perspectiveViewBackgroundColor', viewer.perspectiveViewBackgroundColor);
   }
 }
 
 export class Viewer extends RefCounted implements ViewerState {
-  title = new TrackableValue<string|undefined>(undefined, verifyString);
+  title = new TrackableValue<string | undefined>(undefined, verifyString);
   coordinateSpace = new TrackableCoordinateSpace();
   position = this.registerDisposer(new Position(this.coordinateSpace));
   velocity = this.registerDisposer(new CoordinateSpacePlaybackVelocity(this.coordinateSpace));
   relativeDisplayScales =
-      this.registerDisposer(new TrackableRelativeDisplayScales(this.coordinateSpace));
+    this.registerDisposer(new TrackableRelativeDisplayScales(this.coordinateSpace));
   displayDimensions = this.registerDisposer(new TrackableDisplayDimensions(this.coordinateSpace));
   displayDimensionRenderInfo = this.registerDisposer(new WatchableDisplayDimensionRenderInfo(
-      this.relativeDisplayScales.addRef(), this.displayDimensions.addRef()));
+    this.relativeDisplayScales.addRef(), this.displayDimensions.addRef()));
   crossSectionOrientation = this.registerDisposer(new OrientationState());
   crossSectionScale = this.registerDisposer(
-      new TrackableCrossSectionZoom(this.displayDimensionRenderInfo.addRef()));
+    new TrackableCrossSectionZoom(this.displayDimensionRenderInfo.addRef()));
   projectionOrientation = this.registerDisposer(new OrientationState());
   crossSectionDepthRange =
-      this.registerDisposer(new TrackableDepthRange(-10, this.displayDimensionRenderInfo));
+    this.registerDisposer(new TrackableDepthRange(-10, this.displayDimensionRenderInfo));
   projectionDepthRange =
-      this.registerDisposer(new TrackableDepthRange(-50, this.displayDimensionRenderInfo));
+    this.registerDisposer(new TrackableDepthRange(-50, this.displayDimensionRenderInfo));
   projectionScale =
-      this.registerDisposer(new TrackableProjectionZoom(this.displayDimensionRenderInfo.addRef()));
+    this.registerDisposer(new TrackableProjectionZoom(this.displayDimensionRenderInfo.addRef()));
   navigationState = this.registerDisposer(new NavigationState(
-      new DisplayPose(
-          this.position.addRef(), this.displayDimensionRenderInfo.addRef(),
-          this.crossSectionOrientation.addRef()),
-      this.crossSectionScale.addRef(), this.crossSectionDepthRange.addRef()));
+    new DisplayPose(
+      this.position.addRef(), this.displayDimensionRenderInfo.addRef(),
+      this.crossSectionOrientation.addRef()),
+    this.crossSectionScale.addRef(), this.crossSectionDepthRange.addRef()));
   perspectiveNavigationState = this.registerDisposer(new NavigationState(
-      new DisplayPose(
-          this.position.addRef(), this.displayDimensionRenderInfo.addRef(),
-          this.projectionOrientation.addRef()),
-      this.projectionScale.addRef(), this.projectionDepthRange.addRef()));
+    new DisplayPose(
+      this.position.addRef(), this.displayDimensionRenderInfo.addRef(),
+      this.projectionOrientation.addRef()),
+    this.projectionScale.addRef(), this.projectionDepthRange.addRef()));
   mouseState = new MouseSelectionState();
   layerManager = this.registerDisposer(new LayerManager());
   selectedLayer = this.registerDisposer(new SelectedLayerState(this.layerManager.addRef()));
@@ -301,9 +312,9 @@ export class Viewer extends RefCounted implements ViewerState {
   helpPanelState = new HelpPanelState();
   settingsPanelState = new ViewerSettingsPanelState();
   layerSelectedValues =
-      this.registerDisposer(new LayerSelectedValues(this.layerManager, this.mouseState));
+    this.registerDisposer(new LayerSelectedValues(this.layerManager, this.mouseState));
   selectionDetailsState = this.registerDisposer(
-      new TrackableDataSelectionState(this.coordinateSpace, this.layerSelectedValues));
+    new TrackableDataSelectionState(this.coordinateSpace, this.layerSelectedValues));
   selectedStateServer = new TrackableValue<string>('', verifyString);
   layerListPanelState = new LayerListPanelState();
 
@@ -334,14 +345,14 @@ export class Viewer extends RefCounted implements ViewerState {
     const showUIControls = this.uiConfiguration.showUIControls;
     const option = this.uiConfiguration[key];
     return this.registerDisposer(
-        makeDerivedWatchableValue((a, b) => a && b, showUIControls, option));
+      makeDerivedWatchableValue((a, b) => a && b, showUIControls, option));
   }
 
   /**
    * Logical and of each `VIEWER_UI_CONTROL_CONFIG_OPTIONS` option with the value of showUIControls.
    */
   uiControlVisibility: {
-    [key in(typeof VIEWER_UI_CONTROL_CONFIG_OPTIONS)[number]]: WatchableValueInterface<boolean>
+    [key in (typeof VIEWER_UI_CONTROL_CONFIG_OPTIONS)[number]]: WatchableValueInterface<boolean>
   } = <any>{};
 
   showLayerDialog: boolean;
@@ -352,6 +363,7 @@ export class Viewer extends RefCounted implements ViewerState {
   }
 
   visible = true;
+
 
   constructor(public display: DisplayContext, options: Partial<ViewerOptions> = {}) {
     super();
@@ -366,7 +378,7 @@ export class Viewer extends RefCounted implements ViewerState {
       },
       element = display.makeCanvasOverlayElement(),
       dataSourceProvider =
-          getDefaultDataSourceProvider({credentialsManager: defaultCredentialsManager}),
+      getDefaultDataSourceProvider({ credentialsManager: defaultCredentialsManager }),
       uiConfiguration = makeViewerUIConfiguration(),
     } = options;
     this.visibility = visibility;
@@ -374,7 +386,7 @@ export class Viewer extends RefCounted implements ViewerState {
     this.element = element;
     this.dataSourceProvider = dataSourceProvider;
     this.uiConfiguration = uiConfiguration;
-
+    this.updateBearerTokenIfNeeded();
     this.registerDisposer(observeWatchable(value => {
       this.display.applyWindowedViewportToElement(element, value);
     }, this.partialViewport));
@@ -385,7 +397,7 @@ export class Viewer extends RefCounted implements ViewerState {
 
     setViewerUiConfiguration(uiConfiguration, options);
 
-    const optionsWithDefaults = {...defaultViewerOptions, ...options};
+    const optionsWithDefaults = { ...defaultViewerOptions, ...options };
     const {
       resetStateWhenEmpty,
       showLayerDialog,
@@ -402,9 +414,9 @@ export class Viewer extends RefCounted implements ViewerState {
     this.resetStateWhenEmpty = resetStateWhenEmpty;
 
     this.layerSpecification = new TopLevelLayerListSpecification(
-        this.display, this.dataSourceProvider, this.layerManager, this.chunkManager,
-        this.selectionDetailsState, this.selectedLayer, this.navigationState.coordinateSpace,
-        this.navigationState.pose.position, this.globalToolBinder);
+      this.display, this.dataSourceProvider, this.layerManager, this.chunkManager,
+      this.selectionDetailsState, this.selectedLayer, this.navigationState.coordinateSpace,
+      this.navigationState.pose.position, this.globalToolBinder);
 
     this.registerDisposer(display.updateStarted.add(() => {
       this.onUpdateDisplay();
@@ -426,7 +438,7 @@ export class Viewer extends RefCounted implements ViewerState {
     // shown.
     const maybeResetState = this.registerCancellable(debounce(() => {
       if (!this.wasDisposed && this.layerManager.managedLayers.length === 0 &&
-          this.resetStateWhenEmpty) {
+        this.resetStateWhenEmpty) {
         // No layers, reset state.
         this.navigationState.reset();
         this.perspectiveNavigationState.pose.orientation.reset();
@@ -465,7 +477,7 @@ export class Viewer extends RefCounted implements ViewerState {
   }
 
   private updateShowBorders() {
-    const {element} = this;
+    const { element } = this;
     const className = 'neuroglancer-show-panel-borders';
     if (this.uiConfiguration.showPanelBorders.value) {
       element.classList.add(className);
@@ -488,20 +500,20 @@ export class Viewer extends RefCounted implements ViewerState {
     topRow.style.alignItems = 'stretch';
 
     const positionWidget = this.registerDisposer(new PositionWidget(
-        this.navigationState.position, this.layerSpecification.coordinateSpaceCombiner, {
-          velocity: this.velocity,
-          getToolBinder: () => this.toolBinder,
-        }));
+      this.navigationState.position, this.layerSpecification.coordinateSpaceCombiner, {
+      velocity: this.velocity,
+      getToolBinder: () => this.toolBinder,
+    }));
     this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-        this.uiControlVisibility.showLocation, positionWidget.element));
+      this.uiControlVisibility.showLocation, positionWidget.element));
     topRow.appendChild(positionWidget.element);
 
     const mousePositionWidget = this.registerDisposer(new MousePositionWidget(
-        document.createElement('div'), this.mouseState, this.navigationState.coordinateSpace));
+      document.createElement('div'), this.mouseState, this.navigationState.coordinateSpace));
     mousePositionWidget.element.style.flex = '1';
     mousePositionWidget.element.style.alignSelf = 'center';
     this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-        this.uiControlVisibility.showLocation, mousePositionWidget.element));
+      this.uiControlVisibility.showLocation, mousePositionWidget.element));
     topRow.appendChild(mousePositionWidget.element);
 
     if (typeof NEUROGLANCER_CREDIT_LINK !== 'undefined') {
@@ -509,7 +521,7 @@ export class Viewer extends RefCounted implements ViewerState {
       if (!Array.isArray(creditInfo)) {
         creditInfo = [creditInfo];
       }
-      for (const {url, text} of creditInfo) {
+      for (const { url, text } of creditInfo) {
         const creditLink = document.createElement('a');
         creditLink.style.marginRight = '5px';
         creditLink.href = url;
@@ -522,10 +534,10 @@ export class Viewer extends RefCounted implements ViewerState {
     }
 
     const annotationToolStatus = this.registerDisposer(
-        new AnnotationToolStatusWidget(this.selectedLayer, this.globalToolBinder));
+      new AnnotationToolStatusWidget(this.selectedLayer, this.globalToolBinder));
     topRow.appendChild(annotationToolStatus.element);
     this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-        this.uiControlVisibility.showAnnotationToolStatus, annotationToolStatus.element));
+      this.uiControlVisibility.showAnnotationToolStatus, annotationToolStatus.element));
 
     if (stateShareEnabled) {
       const stateShare = this.registerDisposer(new StateShare(this));
@@ -540,150 +552,151 @@ export class Viewer extends RefCounted implements ViewerState {
         const state = this.state.toJSON();
         const client = new Client();
         client.sendActionNotification('save_state', state);
-    
+
         // document.dispatchEvent(keyEvent);
       });
       topRow.appendChild(button);
     }
 
     {
-      const {layerListPanelState} = this;
+      const { layerListPanelState } = this;
       const button =
-          this.registerDisposer(new CheckboxIcon(layerListPanelState.location.watchableVisible, {
-            svg: svg_layers,
-            backgroundScheme: 'dark',
-            enableTitle: 'Show layer list panel',
-            disableTitle: 'Hide layer list panel'
-          }));
+        this.registerDisposer(new CheckboxIcon(layerListPanelState.location.watchableVisible, {
+          svg: svg_layers,
+          backgroundScheme: 'dark',
+          enableTitle: 'Show layer list panel',
+          disableTitle: 'Hide layer list panel'
+        }));
       button.element.insertAdjacentElement(
-          'afterbegin',
-          this.registerDisposer(new LayerArchiveCountWidget(this.layerManager)).element);
+        'afterbegin',
+        this.registerDisposer(new LayerArchiveCountWidget(this.layerManager)).element);
       this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-          this.uiControlVisibility.showLayerListPanelButton, button.element));
+        this.uiControlVisibility.showLayerListPanelButton, button.element));
       topRow.appendChild(button.element);
     }
 
+
     {
-      const {selectionDetailsState} = this;
+      const { selectionDetailsState } = this;
       const button =
-          this.registerDisposer(new CheckboxIcon(selectionDetailsState.location.watchableVisible, {
-            svg: svg_list,
-            backgroundScheme: 'dark',
-            enableTitle: 'Show selection details panel',
-            disableTitle: 'Hide selection details panel'
-          }));
+        this.registerDisposer(new CheckboxIcon(selectionDetailsState.location.watchableVisible, {
+          svg: svg_list,
+          backgroundScheme: 'dark',
+          enableTitle: 'Show selection details panel',
+          disableTitle: 'Hide selection details panel'
+        }));
       this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-          this.uiControlVisibility.showSelectionPanelButton, button.element));
+        this.uiControlVisibility.showSelectionPanelButton, button.element));
       topRow.appendChild(button.element);
     }
 
     {
-      const {selectedLayer} = this;
+      const { selectedLayer } = this;
       const button = this.registerDisposer(new CheckboxIcon(
-          {
-            get value() {
-              return selectedLayer.visible;
-            },
-            set value(visible: boolean) {
-              selectedLayer.visible = visible;
-            },
-            changed: selectedLayer.location.locationChanged,
+        {
+          get value() {
+            return selectedLayer.visible;
           },
-          {
-            svg: svg_controls_alt,
-            backgroundScheme: 'dark',
-            enableTitle: 'Show layer side panel',
-            disableTitle: 'Hide layer side panel'
-          }));
+          set value(visible: boolean) {
+            selectedLayer.visible = visible;
+          },
+          changed: selectedLayer.location.locationChanged,
+        },
+        {
+          svg: svg_controls_alt,
+          backgroundScheme: 'dark',
+          enableTitle: 'Show layer side panel',
+          disableTitle: 'Hide layer side panel'
+        }));
       this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-          this.uiControlVisibility.showLayerSidePanelButton, button.element));
+        this.uiControlVisibility.showLayerSidePanelButton, button.element));
       topRow.appendChild(button.element);
     }
 
     {
-      const button = makeIcon({text: '{}', title: 'Edit JSON state'});
+      const button = makeIcon({ text: '{}', title: 'Edit JSON state' });
       this.registerEventListener(button, 'click', () => {
         this.editJsonState();
       });
       this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-          this.uiControlVisibility.showEditStateButton, button));
+        this.uiControlVisibility.showEditStateButton, button));
       topRow.appendChild(button);
     }
 
     {
-      const {helpPanelState} = this;
+      const { helpPanelState } = this;
       const button =
-          this.registerDisposer(new CheckboxIcon(helpPanelState.location.watchableVisible, {
-            text: '?',
-            backgroundScheme: 'dark',
-            enableTitle: 'Show help panel',
-            disableTitle: 'Hide help panel'
-          }));
+        this.registerDisposer(new CheckboxIcon(helpPanelState.location.watchableVisible, {
+          text: '?',
+          backgroundScheme: 'dark',
+          enableTitle: 'Show help panel',
+          disableTitle: 'Hide help panel'
+        }));
       this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-          this.uiControlVisibility.showHelpButton, button.element));
+        this.uiControlVisibility.showHelpButton, button.element));
       topRow.appendChild(button.element);
     }
 
     {
-      const {settingsPanelState} = this;
+      const { settingsPanelState } = this;
       const button =
-          this.registerDisposer(new CheckboxIcon(settingsPanelState.location.watchableVisible, {
-            svg: svg_settings,
-            backgroundScheme: 'dark',
-            enableTitle: 'Show settings panel',
-            disableTitle: 'Hide settings panel'
-          }));
+        this.registerDisposer(new CheckboxIcon(settingsPanelState.location.watchableVisible, {
+          svg: svg_settings,
+          backgroundScheme: 'dark',
+          enableTitle: 'Show settings panel',
+          disableTitle: 'Hide settings panel'
+        }));
       this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-          this.uiControlVisibility.showSettingsButton, button.element));
+        this.uiControlVisibility.showSettingsButton, button.element));
       topRow.appendChild(button.element);
     }
 
     this.registerDisposer(new ElementVisibilityFromTrackableBoolean(
-        makeDerivedWatchableValue(
-            (...values: boolean[]) => values.reduce((a, b) => a || b, false),
-            ...VIEWER_TOP_ROW_CONFIG_OPTIONS.map(key => this.uiControlVisibility[key])),
-        topRow));
+      makeDerivedWatchableValue(
+        (...values: boolean[]) => values.reduce((a, b) => a || b, false),
+        ...VIEWER_TOP_ROW_CONFIG_OPTIONS.map(key => this.uiControlVisibility[key])),
+      topRow));
 
     gridContainer.appendChild(topRow);
 
     this.layout = this.registerDisposer(new RootLayoutContainer(this, '4panel'));
     this.sidePanelManager = this.registerDisposer(
-        new SidePanelManager(this.display, this.layout.element, this.visibility));
+      new SidePanelManager(this.display, this.layout.element, this.visibility));
     this.registerDisposer(this.sidePanelManager.registerPanel({
       location: this.layerListPanelState.location,
       makePanel: () => new LayerListPanel(
-          this.sidePanelManager, this.layerSpecification, this.layerListPanelState),
+        this.sidePanelManager, this.layerSpecification, this.layerListPanelState),
     }));
     this.registerDisposer(
-        new LayerSidePanelManager(this.sidePanelManager, this.selectedLayer.addRef()));
+      new LayerSidePanelManager(this.sidePanelManager, this.selectedLayer.addRef()));
     this.registerDisposer(this.sidePanelManager.registerPanel({
       location: this.selectionDetailsState.location,
       makePanel: () => new SelectionDetailsPanel(
-          this.sidePanelManager, this.selectionDetailsState, this.layerSpecification,
-          this.selectedLayer),
+        this.sidePanelManager, this.selectionDetailsState, this.layerSpecification,
+        this.selectedLayer),
     }));
     gridContainer.appendChild(this.sidePanelManager.element);
 
     this.registerDisposer(this.sidePanelManager.registerPanel({
       location: this.statisticsDisplayState.location,
       makePanel: () => new StatisticsPanel(
-          this.sidePanelManager, this.chunkQueueManager, this.statisticsDisplayState),
+        this.sidePanelManager, this.chunkQueueManager, this.statisticsDisplayState),
     }));
 
     this.registerDisposer(this.sidePanelManager.registerPanel({
       location: this.helpPanelState.location,
       makePanel: () => {
-        const {inputEventBindings} = this;
+        const { inputEventBindings } = this;
         return new InputEventBindingHelpDialog(
-            this.sidePanelManager,
-            this.helpPanelState,
-            [
-              ['Global', inputEventBindings.global],
-              ['Cross section view', inputEventBindings.sliceView],
-              ['3-D projection view', inputEventBindings.perspectiveView]
-            ],
-            this.layerManager,
-            this.globalToolBinder,
+          this.sidePanelManager,
+          this.helpPanelState,
+          [
+            ['Global', inputEventBindings.global],
+            ['Cross section view', inputEventBindings.sliceView],
+            ['3-D projection view', inputEventBindings.perspectiveView]
+          ],
+          this.layerManager,
+          this.globalToolBinder,
         );
       },
     }));
@@ -691,7 +704,7 @@ export class Viewer extends RefCounted implements ViewerState {
     this.registerDisposer(this.sidePanelManager.registerPanel({
       location: this.settingsPanelState.location,
       makePanel: () =>
-          new ViewerSettingsPanel(this.sidePanelManager, this.settingsPanelState, this),
+        new ViewerSettingsPanel(this.sidePanelManager, this.settingsPanelState, this),
     }));
 
     const updateVisibility = () => {
@@ -709,7 +722,7 @@ export class Viewer extends RefCounted implements ViewerState {
    * Called once by the constructor to set up event handlers.
    */
   private registerEventActionBindings() {
-    const {element} = this;
+    const { element } = this;
     this.registerDisposer(new KeyboardEventBinder(element, this.inputEventMap));
     this.registerDisposer(new AutomaticallyFocusedElement(element));
   }
@@ -774,8 +787,7 @@ export class Viewer extends RefCounted implements ViewerState {
       }
       const userLayer = selectedLayer.layer;
       if (userLayer === null || userLayer.tool.value === undefined) {
-        StatusMessage.showTemporaryMessage(`The selected layer (${
-            JSON.stringify(selectedLayer.name)}) does not have an active annotation tool.`);
+        StatusMessage.showTemporaryMessage(`The selected layer (${JSON.stringify(selectedLayer.name)}) does not have an active annotation tool.`);
         return;
       }
       userLayer.tool.value.trigger(this.mouseState);
@@ -794,13 +806,13 @@ export class Viewer extends RefCounted implements ViewerState {
 
   private toolInputEventMapBinder = (inputEventMap: EventActionMap, context: RefCounted) => {
     context.registerDisposer(
-        this.inputEventBindings.sliceView.addParent(inputEventMap, Number.POSITIVE_INFINITY));
+      this.inputEventBindings.sliceView.addParent(inputEventMap, Number.POSITIVE_INFINITY));
     context.registerDisposer(
-        this.inputEventBindings.perspectiveView.addParent(inputEventMap, Number.POSITIVE_INFINITY));
+      this.inputEventBindings.perspectiveView.addParent(inputEventMap, Number.POSITIVE_INFINITY));
   };
 
   private globalToolBinder =
-      this.registerDisposer(new GlobalToolBinder(this.toolInputEventMapBinder));
+    this.registerDisposer(new GlobalToolBinder(this.toolInputEventMapBinder));
 
   public toolBinder = this.registerDisposer(new LocalToolBinder(this, this.globalToolBinder));
 
@@ -812,7 +824,7 @@ export class Viewer extends RefCounted implements ViewerState {
     new StateEditorDialog(this);
   }
 
-  showStatistics(value: boolean|undefined = undefined) {
+  showStatistics(value: boolean | undefined = undefined) {
     if (value === undefined) {
       value = !this.statisticsDisplayState.location.visible;
     }
@@ -831,12 +843,46 @@ export class Viewer extends RefCounted implements ViewerState {
 
   private handleNavigationStateChanged() {
     if (this.visible) {
-      let {chunkQueueManager} = this.dataContext;
+      let { chunkQueueManager } = this.dataContext;
       if (chunkQueueManager.chunkUpdateDeadline === null) {
         chunkQueueManager.chunkUpdateDeadline = Date.now() + 10;
       }
     }
   }
+
+
+
+  getCookie(name: string): string | undefined {
+
+    const nameEQ = name + "=";
+    // Check if we are in a worker or in the browser
+    if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+      // Safe to access document or window here
+      const ca = document.cookie.split(';');
+      // process cookies
+      for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) === 0) {
+          const cookieValue = c.substring(nameEQ.length, c.length);
+          console.log("Found cookie:", name, "=", cookieValue);
+          return cookieValue;
+        }
+      }
+    }
+    console.log("Cookie not found:", name);
+    return undefined;
+  }
+  private updateBearerTokenIfNeeded(): void {
+    const newBearerToken = this.getCookie('bearer_token');
+    console.log("newBearerToken:", newBearerToken);
+    // Update the trackable string only if the new value is not undefined
+    if (newBearerToken !== undefined) {
+      console.log("Updating bearerToken:", newBearerToken);
+      tokenManager.updateBearerTokenIfNeeded(newBearerToken); // Use the .value setter to update
+    }
+  }
+
 }
 document.addEventListener('keydown', (event) => {
   if (event.ctrlKey && event.key === 's') {
