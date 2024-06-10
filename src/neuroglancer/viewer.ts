@@ -551,7 +551,7 @@ export class Viewer extends RefCounted implements ViewerState {
       const access_token = this.getCookie('access_token');
       const url = document.location.href;
       const viewerID = url.split('/').pop();
-
+      console.log('viewerID:', viewerID);
       button.addEventListener('click', () => {
         const state = this.state.toJSON();
         state['access_token'] = access_token;
