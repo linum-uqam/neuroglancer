@@ -550,15 +550,13 @@ export class Viewer extends RefCounted implements ViewerState {
       button.textContent = 'Save state';
       const access_token = this.getCookie('access_token');
       const url = document.location.href;
-      const viewerID = url.split('/').pop();
-      console.log('viewerID:', viewerID);
       button.addEventListener('click', () => {
         const state = this.state.toJSON();
         state['access_token'] = access_token;
-        state['viewer_id'] = viewerID;
+        state['url'] = url;
         const client = new Client();
         console.log('Sending state:', state);
-        client.sendActionNotification('save_state', state);
+        client.sendActionNotification('save_state', {});
 
         // document.dispatchEvent(keyEvent);
       });
