@@ -554,8 +554,8 @@ export class Viewer extends RefCounted implements ViewerState {
         const state = this.state.toJSON();
         state['access_token'] = access_token;
         state['url'] = url;
-        const client = new Client();
         console.log('Sending state:', state);
+        const client = new Client();
         client.sendActionNotification('save_state', {});
 
         // document.dispatchEvent(keyEvent);
