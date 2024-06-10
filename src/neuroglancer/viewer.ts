@@ -547,7 +547,7 @@ export class Viewer extends RefCounted implements ViewerState {
     // Custom button to save state
     {
       const button = document.createElement('button');
-      button.textContent = 'Save state';ç
+      button.textContent = 'Save state';
       const access_token = this.getCookie('access_token');
       const url = document.location.href;
       const viewerID = url.split('/').pop();
