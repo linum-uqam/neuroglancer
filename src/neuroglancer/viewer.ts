@@ -556,7 +556,7 @@ export class Viewer extends RefCounted implements ViewerState {
         state['url'] = url;
         console.log('Sending state:', state);
         const client = new Client();
-        client.sendActionNotification('save_state', {});
+        client.sendActionNotification('save_state', state);
 
         // document.dispatchEvent(keyEvent);
       });
