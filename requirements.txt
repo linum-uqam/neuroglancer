@@ -1,0 +1,7 @@
+flask
+neuroglancer
+pyjwt
+requests
+tornado
+numpy
+watchdog

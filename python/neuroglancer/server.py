@@ -55,7 +55,7 @@ CREDENTIALS_PATH_REGEX = r'^/credentials/(?P<viewer_token>[^/]+)$'
 
 global_static_content_source = None
 
-global_server_args = dict(bind_address='127.0.0.1', bind_port=0)
+global_server_args = dict(bind_address='127.0.0.1', bind_port=5002) 
 
 debug = False
 
@@ -302,7 +302,6 @@ class CredentialsHandler(BaseRequestHandler):
             import traceback
             traceback.print_exc()
             self.send_error(401)
-
 
 class VolumeInfoHandler(BaseRequestHandler):
     def get(self, token):

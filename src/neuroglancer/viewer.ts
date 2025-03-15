@@ -112,7 +112,7 @@ export class DataManagementContext extends RefCounted {
     });
   }
   sendInitializationDataToWorker(data: { url: string; cookies: string }) {
-    this.rpc.invoke('initialize.info', {data: data});
+    this.rpc.invoke('initialize.info', { data: data });
   }
 }
 

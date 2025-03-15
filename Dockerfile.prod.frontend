@@ -1,0 +1,14 @@
+FROM node:18-alpine
+
+WORKDIR /sbh-neuroglancer
+
+COPY sbh-neuroglancer/package.json sbh-neuroglancer/package-lock.json ./
+RUN npm install
+
+COPY sbh-neuroglancer .
+
+# Build production assets (adjust according to your frontend build process)
+RUN npm run build
+
+EXPOSE 8080
+CMD ["npx", "serve", "-s", "dist", "-l", "8080"]

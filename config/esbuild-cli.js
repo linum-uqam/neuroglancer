@@ -193,7 +193,7 @@ if (require.main === module) {
               nargs: 1,
               description:
                   'Specifies bind address for development server, e.g. 0.0.0.0 or 127.0.0.1',
-              default: '127.0.0.1',
+              default: '0.0.0.0',
             },
             port: {
               group: 'Development server options:',
