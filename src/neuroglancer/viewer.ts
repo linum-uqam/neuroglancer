@@ -548,16 +548,8 @@ export class Viewer extends RefCounted implements ViewerState {
     {
       const button = document.createElement('button');
       button.textContent = 'Save state';
-      const access_token = this.getCookie('access_token');
-      const url = document.location.href;
       button.addEventListener('click', () => {
-        const state = this.state.toJSON();
-        state['access_token'] = access_token;
-        state['url'] = url;
-        console.log('Sending state:', state);
-        const client = new Client();
-        client.sendActionNotification('save_state', state);
-
+        this.saveState();
         // document.dispatchEvent(keyEvent);
       });
       topRow.appendChild(button);
@@ -855,7 +847,16 @@ export class Viewer extends RefCounted implements ViewerState {
     }
   }
 
-
+  saveState(): void {
+     const access_token = this.getCookie('access_token');
+     const url = document.location.href;
+     const state = this.state.toJSON();
+     state['access_token'] = access_token;
+     state['url'] = url;
+     console.log('Sending state:', state);
+     const client = new Client();
+     client.sendActionNotification('save_state', state);
+  }
 
   getCookie(name: string): string | undefined {
 
