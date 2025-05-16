@@ -76,10 +76,6 @@ class NeuroglancerManager:
         # Register "Save State" action for this viewer
         viewer.actions.add('save_state', lambda s: self.save_state_action(viewer.token, s))
 
-        # Bind "Ctrl+S" to save state
-        with viewer.config_state.txn() as s:
-            s.input_event_bindings.viewer['control+key_s'] = 'save_state'
-        
         viewer_url = viewer.get_viewer_url()
         # print("Raw viewer_url : ", viewer_url)
         # Replace the bind address with the external address for client use:

@@ -39,6 +39,7 @@ import {UrlHashBinding} from 'neuroglancer/ui/url_hash_binding';
 import {parseFixedLengthArray, verifyInt} from 'neuroglancer/util/json';
 import {CompoundTrackable, Trackable} from 'neuroglancer/util/trackable';
 import {InputEventBindings, VIEWER_UI_CONFIG_OPTIONS} from 'neuroglancer/viewer';
+import { add_custom_functionalities } from './linum-extensions/custom_functionalities';
 
 function makeTrackableBasedEventActionMaps(inputEventBindings: InputEventBindings) {
   const config = new CompoundTrackable();
@@ -181,4 +182,5 @@ window.addEventListener('DOMContentLoaded', () => {
   bindDefaultCopyHandler(viewer);
   bindDefaultPasteHandler(viewer);
   viewer.registerDisposer(bindTitle(viewer.title));
+  add_custom_functionalities(viewer);
 });
