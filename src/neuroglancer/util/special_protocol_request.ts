@@ -154,7 +154,7 @@ export async function cancellableFetchSpecialOk<T>(
         ...init // Include other properties from the original init object
       };
       return await cancellableFetchOk(
-        `https://${u.host}${u.path}`, requestOptions, transformResponse,
+        `http://${u.host}${u.path}`, requestOptions, transformResponse,
         cancellationToken); // CancellationToken = uncancelableToken
     default:
       return fetchWithOAuth2Credentials(

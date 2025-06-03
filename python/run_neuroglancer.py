@@ -11,6 +11,7 @@ import requests
 import tornado.autoreload
 import asyncio
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from functools import wraps
 import jwt
 
@@ -22,6 +23,7 @@ NEUROGLANCER_EXTERNAL_ADDRESS  = os.getenv("NEUROGLANCER_EXTERNAL_ADDRESS", "127
 NEUROGLANCER_PORT = int(os.getenv('NEUROGLANCER_PORT', '5002'))  # Port for Neuroglancer
 API_PORT = int(os.getenv('API_PORT', '5003'))  # Port for API
 OAUTH2_JWT_KEY = os.getenv("OAUTH2_JWT_KEY", "default_client_secret")
+CLIENT_ID = os.getenv("CLIENT_ID", "default_client_id")
 JWT_ALGORITHM = "HS256"
 SBH_BACKEND_API_URL = os.getenv('SBH_BACKEND_API_URL', 'http://sbh-backend:5001')  # Backend API
 
@@ -34,7 +36,8 @@ def jwt_required(f):
             return jsonify({"error": "Unauthorized: No access token"}), 401
         
         try:
-            decoded_token = jwt.decode(token, OAUTH2_JWT_KEY, algorithms=[JWT_ALGORITHM])
+            decoded_token = jwt.decode(token, OAUTH2_JWT_KEY,  audience=CLIENT_ID, algorithms=[JWT_ALGORITHM])
+            print("decoded_token", decoded_token)
             request.user = decoded_token  # Attach decoded user info to request
             return f(*args, **kwargs)
         except jwt.ExpiredSignatureError:
@@ -45,6 +48,7 @@ def jwt_required(f):
     return decorated_function
 
 app = Flask(__name__)
+CORS(app, origins="http://127.0.0.1:8081", supports_credentials=True)
 
 class NeuroglancerManager:
     """ Manages multiple Neuroglancer viewer instances """
@@ -84,13 +88,11 @@ class NeuroglancerManager:
         # print("Raw viewer_url : ", viewer_url)
         # Replace the bind address with the external address for client use:
         viewer_url = viewer_url.replace("0.0.0.0", NEUROGLANCER_EXTERNAL_ADDRESS)
-        print("hey")
-        # print("hey2")
         print(f"{viewer_url}")
 
         return viewer_url
 
-    def get_viewer(self, token):
+    def get_viewer(self, token) -> neuroglancer.Viewer :
         """ Get an existing viewer by token """
         return self.viewers.get(token)
 
@@ -133,11 +135,26 @@ class NeuroglancerManager:
         except Exception as e:
             print(f"Error forwarding state to sbh-backend: {str(e)}")
 
+    def save_viewer_state(self, viewer_token: str, state: dict, access_token: str):
+        """
+        Programmatic save: push `state` (a plain dict) back into sbh-backend.
+        """
+        url = f"{SBH_BACKEND_API_URL}/neuroglancer/save_state_by_viewer_id/{viewer_token}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        payload = {"state": state}
+        try:
+            resp = requests.put(url, json=payload, headers=headers)
+            resp.raise_for_status()
+            return resp.json()
+        except Exception as e:
+            print(f"[NeuroglancerManager.save_viewer_state] error: {e}")
+            raise
+
 
 ngm = NeuroglancerManager()
 
 @app.route('/create_viewer', methods=['POST'])
-# @jwt_required
+@jwt_required
 def create_viewer():
     """ API to create a new Neuroglancer viewer """
     data = request.json
@@ -172,6 +189,61 @@ def delete_viewer(token):
 def list_viewers():
     """ API to list all active viewers """
     return jsonify({"viewers": list(ngm.viewers.keys())})
+
+@app.route('/add_source', methods=['POST'])
+@jwt_required
+def add_source():
+    data         = request.json or {}
+    viewer_token = data.get('viewer_token')
+    source_name  = data.get('name')
+    source_url   = data.get('url')
+
+    if not (viewer_token and source_name and source_url):
+        return jsonify({"error":"Missing viewer_token, name or url"}), 400
+
+    viewer = ngm.get_viewer(viewer_token)
+    if not viewer:
+        return jsonify({"error":"Viewer not found"}), 404
+
+    try:
+        # 1) Mutate in-memory Neuroglancer state
+        with viewer.txn() as s:
+            s.layers[source_name] = neuroglancer.ImageLayer(source=source_url)
+            new_state = s.to_json()
+
+        # 2) Inject the URL and JWT so sbh-backend can authorize+persist
+        new_state['url']          = viewer.get_viewer_url()
+        new_state['access_token'] = request.cookies.get("access_token")
+
+        # 3) Push into your sbh-backend
+        ngm.save_viewer_state(viewer_token, new_state, new_state['access_token'])
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to add & save layer: {e}"}), 500
+
+    return jsonify({"success": True}), 200
+
+@app.post("/save_state")
+@jwt_required
+def manual_save_state():
+    data = request.json or {}
+    viewer_token = data.get("viewer_token")
+    viewer = ngm.get_viewer(viewer_token)
+    if not viewer:
+        return jsonify({"error":"Viewer not found"}), 404
+
+    # grab the current in‐memory state
+    state = viewer.state.to_json()
+    state["url"] = viewer.get_viewer_url()
+    state["access_token"] = request.cookies.get("access_token")
+
+    # push into your SBH backend
+    try:
+        ngm.save_viewer_state(viewer_token, state, state["access_token"])
+    except Exception as e:
+        return jsonify({"error": f"Save failed: {e}"}), 500
+
+    return jsonify({"success": True}), 200
 
 if __name__ == '__main__':
     # Enable Tornado's auto-reload (for hot-reloading)

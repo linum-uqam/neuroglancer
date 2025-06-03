@@ -1,41 +1,39 @@
 # Use the official Python image
 FROM python:3.10
 
-# Set working directory inside the container
+# 1) Create a venv at /venv and put it on PATH
+ENV VIRTUAL_ENV=/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# 2) Set working dir for your code
 WORKDIR /sbh-neuroglancer
 
-# Install dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    nodejs \
-    npm \
+# 3) Install OS-level dependencies
+RUN apt-get update \
+    && apt-get install -y curl nodejs npm \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a virtual environment (but do NOT modify PATH globally)
-RUN python -m venv .venv
+# 4) Copy only requirements first (for Docker cache)
+COPY sbh-neuroglancer/requirements.txt ./requirements.txt
 
-ENV SETUPTOOLS_SCM_PRETEND_VERSION=0.0.1
+# 5) Install Python deps into the venv
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
 
-# Copy dependencies first (for caching)
-COPY sbh-neuroglancer/requirements.txt requirements.txt
+# 6) Copy your entire Neuroglancer/API code
+COPY sbh-neuroglancer/ .
 
-# Install Python dependencies inside the virtual environment
-RUN .venv/bin/pip install --upgrade pip && .venv/bin/pip install -r requirements.txt
+# 7) Install Neuroglancer (and your API) in editable mode
+RUN pip install -e .
 
-# Copy all project files
-COPY sbh-neuroglancer sbh-neuroglancer
-
-# Install Neuroglancer in editable mode inside the virtual environment
-RUN .venv/bin/pip install -e sbh-neuroglancer
-
-# Set Flask app and enable debug mode
+# 8) Tell Flask where your app is and enable dev mode
 ENV FLASK_APP=run_neuroglancer.py
+ENV FLASK_ENV=development
 ENV FLASK_DEBUG=1
 
-# Expose Neuroglancer & Flask API ports
+# 9) Expose both Neuroglancer & your API ports
 EXPOSE 5002 5003
 
-# Run the backend server explicitly using the virtual environment
-# CMD [".venv/bin/python", "python/run_neuroglancer.py"]
-# CMD [".venv/bin/flask", "--app", "python/run_neuroglancer.py", "--debug", "run", "--host", "0.0.0.0", "--port", "5003"]
-CMD [".venv/bin/watchmedo", "auto-restart", "--patterns=*.py", "--ignore-patterns=__pycache__/*;*.pyc", "--recursive", "--interval=1", "--", ".venv/bin/python", "python/run_neuroglancer.py"]
+# 10) Launch Flask with auto-reload and the debugger
+CMD ["flask", "run", "--host=0.0.0.0", "--port=5003", "--debug"]
