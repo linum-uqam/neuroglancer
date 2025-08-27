@@ -24,6 +24,8 @@ RUN pip install --upgrade pip \
 # 6) Copy your entire Neuroglancer/API code
 COPY sbh-neuroglancer/ .
 
+ENV SETUPTOOLS_SCM_PRETEND_VERSION_FOR_NEUROGLANCER=1.0.0
+
 # 7) Install Neuroglancer (and your API) in editable mode
 RUN pip install -e .
 
